@@ -1,29 +1,48 @@
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Sirenix.OdinInspector;
 
 public class ThirdPersonController : MonoBehaviour
 {
+    [FoldoutGroup("References")]
     public InputSystem_Actions inputs;
+    [FoldoutGroup("References")]
     private CharacterController controller;
+    [FoldoutGroup("References")]
     public CinemachineCamera characterCamera;
+    [FoldoutGroup("References")]
     public Animator animator;
 
 
-
+    [FoldoutGroup("Controller")]
     public float moveSpeed = 5f;
+    [FoldoutGroup("Controller")]
     public float rotationSpeed = 200f;
+    [FoldoutGroup("Controller")]
     public float verticalVelocity = 0;
+    [FoldoutGroup("Controller")]
     public float jumpForce = 10;
-
+    [FoldoutGroup("Controller")]
     public float pushForce = 4;
 
+    [FoldoutGroup("Controller/Dash")]
     private bool IsDashing;
+    [FoldoutGroup("Controller/Dash")]
     public float dashForce;
+    [FoldoutGroup("Controller/Dash")]
     public float dashDuration = 0.2f;
+    [FoldoutGroup("Controller/Dash")]
     private float dashTimer;
 
     [SerializeField] private Vector2 moveInput;
+
+
+
+    [FoldoutGroup("WallRun")]
+    public float rayLenght;
+    [FoldoutGroup("WallRun")]
+    public float maxTimeInAir;
 
 
     private void Awake()
@@ -141,7 +160,7 @@ public class ThirdPersonController : MonoBehaviour
     public void EnableWallRun()
     {
         //->mejor castearlo desde una referenia en los piez
-        Physics.Raycast(transform.position, transform.right, out RaycastHit hitRight, 3f);
+        Physics.Raycast(transform.position, transform.right, out RaycastHit hitRight, rayLenght);
 
         if(hitRight.collider != null &&  hitRight.collider.gameObject.tag == "Wall")
         {
@@ -153,8 +172,8 @@ public class ThirdPersonController : MonoBehaviour
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.purple;
-        Gizmos.DrawRay(transform.position, transform.right * 3);
+        Gizmos.DrawRay(transform.position, transform.right * rayLenght);
         Gizmos.color = Color.navyBlue;
-        Gizmos.DrawRay(transform.position, -transform.right * 3);
+        Gizmos.DrawRay(transform.position, -transform.right * rayLenght);
     }
 }
