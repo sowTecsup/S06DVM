@@ -157,23 +157,43 @@ public class ThirdPersonController : MonoBehaviour
         dashTimer = dashDuration;
     }
 
+    Vector3 normalDebug;
+    Vector3 impactPoint;
     public void EnableWallRun()
     {
         //->mejor castearlo desde una referenia en los piez
         Physics.Raycast(transform.position, transform.right, out RaycastHit hitRight, rayLenght);
 
-        if(hitRight.collider != null &&  hitRight.collider.gameObject.tag == "Wall")
+        Physics.Raycast(transform.position, -transform.right, out RaycastHit hitLeft, rayLenght);
+
+        if (hitRight.collider != null &&  hitRight.collider.gameObject.tag == "Wall")
         {
-            Debug.Log("Aleluya");
+            Debug.Log("AleluyaR");
+
+            normalDebug = hitRight.normal;
+            impactPoint = hitRight.point;
+        }
+
+        if (hitLeft.collider != null && hitLeft.collider.gameObject.tag == "Wall")
+        {
+            Debug.Log("AleluyaL");
         }
 
 
     }
+
+   
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.purple;
         Gizmos.DrawRay(transform.position, transform.right * rayLenght);
         Gizmos.color = Color.navyBlue;
         Gizmos.DrawRay(transform.position, -transform.right * rayLenght);
+
+        Gizmos.color = Color.magenta;
+        Gizmos.DrawRay(impactPoint, normalDebug * rayLenght);
+        Gizmos.DrawSphere(impactPoint, 1);
+
+
     }
 }
