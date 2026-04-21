@@ -34,6 +34,8 @@ public class ThirdPersonController : MonoBehaviour
     public float dashDuration = 0.2f;
     [FoldoutGroup("Controller/Dash")]
     private float dashTimer;
+    [FoldoutGroup("Controller/Animator"), SerializeField]
+    private CinemachineImpulseSource source;
 
     [SerializeField] private Vector2 moveInput;
 
@@ -43,7 +45,12 @@ public class ThirdPersonController : MonoBehaviour
     public float rayLenght;
     [FoldoutGroup("WallRun")]
     public float maxTimeInAir;
+    [FoldoutGroup("WallRun")]
+    public bool enableWallRun;
 
+    Vector3 normalDebug;
+    Vector3 impactPoint;
+    Vector3 crossResult;
 
     private void Awake()
     {
@@ -94,14 +101,31 @@ public class ThirdPersonController : MonoBehaviour
 
 
         }
+        //>?
+        Vector3 moveDir;
+        if (!enableWallRun)
+        {
+            moveDir = (cameraForwardDir * moveInput.y + transform.right * moveInput.x) * moveSpeed;
+        }
+        else
+        {
+            moveDir = (crossResult * moveInput.y) * moveSpeed;
+            source.GenerateImpulse();
 
-        Vector3 moveDir = (cameraForwardDir * moveInput.y+ transform.right * moveInput.x) * moveSpeed;
+            
+        }
+        if (source.IsInvoking())
+            Debug.Log("Im playing");
+       
         float magnitud = Mathf.Abs(controller.velocity.magnitude);
         // print(magnitud);
         animator.SetFloat("Speed", magnitud);
 
 
         verticalVelocity += Physics.gravity.y * Time.deltaTime;
+
+        if (enableWallRun)
+            verticalVelocity = 0;
 
         if (controller.isGrounded && verticalVelocity < 0)
             verticalVelocity = -2f;
@@ -157,8 +181,6 @@ public class ThirdPersonController : MonoBehaviour
         dashTimer = dashDuration;
     }
 
-    Vector3 normalDebug;
-    Vector3 impactPoint;
     public void EnableWallRun()
     {
         //->mejor castearlo desde una referenia en los piez
@@ -168,21 +190,30 @@ public class ThirdPersonController : MonoBehaviour
 
         if (hitRight.collider != null &&  hitRight.collider.gameObject.tag == "Wall")
         {
+            enableWallRun = true;
             Debug.Log("AleluyaR");
 
             normalDebug = hitRight.normal;
             impactPoint = hitRight.point;
+            crossResult = Vector3.Cross(normalDebug, transform.up);//+1
+
+            if( Vector3.Dot(crossResult,transform.forward) < 0)
+            {
+                crossResult *= -1;
+            }
+
+
+        }
+        else
+        {
+            enableWallRun =false;
         }
 
         if (hitLeft.collider != null && hitLeft.collider.gameObject.tag == "Wall")
         {
             Debug.Log("AleluyaL");
         }
-
-
     }
-
-   
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.purple;
@@ -192,7 +223,10 @@ public class ThirdPersonController : MonoBehaviour
 
         Gizmos.color = Color.magenta;
         Gizmos.DrawRay(impactPoint, normalDebug * rayLenght);
-        Gizmos.DrawSphere(impactPoint, 1);
+        Gizmos.DrawSphere(impactPoint, 0.1f);
+
+        Gizmos.color = Color.orange;
+        Gizmos.DrawRay(impactPoint, crossResult * rayLenght);
 
 
     }
