@@ -45,9 +45,6 @@ public class ThirdPersonController : MonoBehaviour
         inputs.Player.Jump.performed += OnJump;
 
         inputs.Player.Sprint.performed += OnDash;
-
-
-
     }
     void Start()
     {
@@ -55,7 +52,7 @@ public class ThirdPersonController : MonoBehaviour
     }
     void Update()
     {
-
+        EnableWallRun();
         OnMove();
         //OnSimpleMove();
     }
@@ -139,5 +136,25 @@ public class ThirdPersonController : MonoBehaviour
     {
         IsDashing = true;
         dashTimer = dashDuration;
+    }
+
+    public void EnableWallRun()
+    {
+        //->mejor castearlo desde una referenia en los piez
+        Physics.Raycast(transform.position, transform.right, out RaycastHit hitRight, 3f);
+
+        if(hitRight.collider != null &&  hitRight.collider.gameObject.tag == "Wall")
+        {
+            Debug.Log("Aleluya");
+        }
+
+
+    }
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.purple;
+        Gizmos.DrawRay(transform.position, transform.right * 3);
+        Gizmos.color = Color.navyBlue;
+        Gizmos.DrawRay(transform.position, -transform.right * 3);
     }
 }
