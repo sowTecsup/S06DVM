@@ -44,6 +44,8 @@ public class ThirdPersonController : MonoBehaviour
     [FoldoutGroup("WallRun")]
     public float rayLenght;
     [FoldoutGroup("WallRun")]
+    public float cameraTitlt = 15;
+    [FoldoutGroup("WallRun")]
     public float maxTimeInAir;
     [FoldoutGroup("WallRun")]
     public bool enableWallRun;
@@ -110,13 +112,11 @@ public class ThirdPersonController : MonoBehaviour
         else
         {
             moveDir = (crossResult * moveInput.y) * moveSpeed;
-            source.GenerateImpulse();
+
 
             
         }
-        if (source.IsInvoking())
-            Debug.Log("Im playing");
-       
+
         float magnitud = Mathf.Abs(controller.velocity.magnitude);
         // print(magnitud);
         animator.SetFloat("Speed", magnitud);
@@ -154,7 +154,7 @@ public class ThirdPersonController : MonoBehaviour
         if (!controller.isGrounded) return;
 
         animator.SetTrigger("Jump");
-
+        source.GenerateImpulse();
         verticalVelocity = jumpForce;
     }
     public void OnSimpleMove()
@@ -184,12 +184,55 @@ public class ThirdPersonController : MonoBehaviour
     public void EnableWallRun()
     {
         //->mejor castearlo desde una referenia en los piez
+        RaycastHit hit = default;
+
         Physics.Raycast(transform.position, transform.right, out RaycastHit hitRight, rayLenght);
 
         Physics.Raycast(transform.position, -transform.right, out RaycastHit hitLeft, rayLenght);
 
+   
+        if (hitRight.collider != null && hitRight.collider.gameObject.tag == "Wall")
+        {
+            hit = hitRight;
+            characterCamera.Lens.Dutch = cameraTitlt;
+        }
+        else if(hitLeft.collider != null && hitLeft.collider.gameObject.tag == "Wall")
+        {
+            hit = hitLeft;
+            characterCamera.Lens.Dutch = -cameraTitlt;
+        }
+        else
+        {
+            characterCamera.Lens.Dutch = 0;
+            enableWallRun = false;
+        }
+
+        if(hit.collider != null)
+        {
+            enableWallRun = true;
+            Debug.Log("AleluyaR");
+
+            normalDebug = hit.normal;
+            impactPoint = hit.point;
+            crossResult = Vector3.Cross(normalDebug, transform.up);//+1
+
+            if (Vector3.Dot(crossResult, transform.forward) < 0)
+            {
+                crossResult *= -1;
+            }
+        }
+
+
+
+
+
+
+        /*
         if (hitRight.collider != null &&  hitRight.collider.gameObject.tag == "Wall")
         {
+
+
+
             enableWallRun = true;
             Debug.Log("AleluyaR");
 
@@ -212,7 +255,7 @@ public class ThirdPersonController : MonoBehaviour
         if (hitLeft.collider != null && hitLeft.collider.gameObject.tag == "Wall")
         {
             Debug.Log("AleluyaL");
-        }
+        }*/
     }
     private void OnDrawGizmos()
     {
