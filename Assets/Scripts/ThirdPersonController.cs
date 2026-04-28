@@ -1,4 +1,4 @@
-using Unity.Android.Gradle.Manifest;
+
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -16,8 +16,8 @@ public class ThirdPersonController : MonoBehaviour
     public CinemachineCamera characterCamera;
     [FoldoutGroup("References")]
     public Animator animator;
-
-
+    [FoldoutGroup("References")]
+    public GameObject model;
 
 
     [FoldoutGroup("Controller")]
@@ -40,6 +40,7 @@ public class ThirdPersonController : MonoBehaviour
 
     [FoldoutGroup("Controller/Jump")]
     public float Gravity = 9.81f;
+
 
 
     [FoldoutGroup("Controller/Dash")]
@@ -79,6 +80,11 @@ public class ThirdPersonController : MonoBehaviour
 
     [FoldoutGroup("WallRun")]
     public float rayLenght;
+
+    [FoldoutGroup("WallRun")]
+    public float airTimeToWallRun = 0.2f;
+
+    private float airTimer;
     Vector3 normalDebug;
     Vector3 impactPoint;
     Vector3 crossResult;
@@ -113,12 +119,20 @@ public class ThirdPersonController : MonoBehaviour
     }
     void Update()
     {
-
+        if (!controller.isGrounded)
+        {
+            airTimer += Time.deltaTime;
+            
+        }
+        else
+        {  
+            airTimer = 0;
+        }
         OnMove();
         //OnSimpleMove();
         EnableWallRun();
 
-        if(enableWallRun)
+        if(enableWallRun && !controller.isGrounded)
         {
             CurrentStaminaForWallRun -= Time.deltaTime;
             if(CurrentStaminaForWallRun < 0)
@@ -179,9 +193,13 @@ public class ThirdPersonController : MonoBehaviour
         
         if (enableWallRun && CanWallRun)
             verticalVelocity = 0;
-        if(!CanWallRun)
+        if(!CanWallRun||controller.isGrounded)
+        {
 
+            model.transform.rotation = Quaternion.Euler(0, 0, 0);
             characterCamera.Lens.Dutch = 0;
+        }
+
 
         //verticalVelocity -= Gravity * Time.deltaTime;
         if (controller.isGrounded && verticalVelocity < 0)
@@ -234,8 +252,10 @@ public class ThirdPersonController : MonoBehaviour
     }
     private void OnDash(InputAction.CallbackContext context)
     {
+
         if(CanDash)
         {
+
             IsDashing = true;
             CanDash = false;
             dashTimer = dashDuration;
@@ -271,12 +291,28 @@ public class ThirdPersonController : MonoBehaviour
         if (hitRight.collider != null && hitRight.collider.gameObject.tag == "Wall")
         {
             hit = hitRight;
-            characterCamera.Lens.Dutch = cameraTitlt;
+            if (enableWallRun)
+            {
+                characterCamera.Lens.Dutch = cameraTitlt;
+
+                //model.transform.rotation = Quaternion.Euler(-90f, 0, -90);
+                animator.SetTrigger("WallRun");
+
+            }
+
         }
         else if(hitLeft.collider != null && hitLeft.collider.gameObject.tag == "Wall")
         {
             hit = hitLeft;
-            characterCamera.Lens.Dutch = -cameraTitlt;
+
+            if (enableWallRun)
+            {
+                characterCamera.Lens.Dutch = -cameraTitlt;
+                //model.transform.rotation = Quaternion.Euler(90f, 0, 90);
+                animator.SetTrigger("WallRun");
+            }
+               
+
         }
         else
         {
@@ -284,11 +320,11 @@ public class ThirdPersonController : MonoBehaviour
             enableWallRun = false;
         }
 
-        if(hit.collider != null)
+        if((hit.collider != null && airTimer >= airTimeToWallRun && CanWallRun))
         {
-            if (controller.isGrounded && verticalVelocity <=0) return;
             enableWallRun = true;
             Debug.Log("AleluyaR");
+
 
             normalDebug = hit.normal;
             impactPoint = hit.point;
@@ -351,6 +387,22 @@ public class ThirdPersonController : MonoBehaviour
         Gizmos.color = Color.orange;
         Gizmos.DrawRay(impactPoint,crossResult * rayLenght);
 
-    }
-    
+
+        Gizmos.color = Color.black;
+        Gizmos.DrawRay(model.transform.position, model.transform.forward * rayLenght*2);
+
+    }/*
+    public void FrontWallAlign()
+    {
+        if (Physics.Raycast(model.transform.position, model.transform.forward, out RaycastHit hit, 1.5f))
+        {
+            if (hit.collider.CompareTag("Wall"))
+            {
+
+                model.transform.rotation = Quaternion.Euler(-90f, 0,0);
+               
+            }
+        }
+    }*/
+
 }
